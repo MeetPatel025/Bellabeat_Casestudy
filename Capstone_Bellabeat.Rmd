@@ -1,0 +1,89 @@
+---
+title: "Bellabeat_Capstone__Project"
+author: "Meet Patel"
+date: "2023-01-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*Introductary Information about Bellabeat Company: *
+Bellabeat is a high-tech manufacturer company which makes health focused products for women. Urška Sršen is the cofounder and Chief Creative Officer of Bellabeat. She believes that analyzing the health data that their company have collected over the years may play a huge role in decision making about marketing strategy for their product to grow the company. 
+
+*Questions for the analysis: * 
+1. What are some trends in smart device usage?
+2. How could these trends apply to Bellabeat customers?
+3. How could these trends help influence Bellabeat marketing strategy?
+
+*Goal: * Identify the growth oppotunities for Bellabeat, specifically make recommendataions for marketing strategy improvement based on the usage of the smart devices. 
+
+```{r loading packages}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+activity <- read.csv('FitabaseData/dailyActivity_merged.csv')
+calorie <- read.csv('FitabaseData/dailyCalories_merged.csv')
+intensity <- read.csv('FitabaseData/dailyIntensities_merged.csv')
+steps <- read.csv('FitabaseData/dailySteps_merged.csv')
+weight <- read.csv('FitabaseData/weightLogInfo_merged.csv')
+sleep <- read.csv('FitabaseData/sleepDay_merged.csv')
+```
+
+
+```{r transform data}
+#intensity
+colnames(intensity)[colnames(intensity) == "ActivityDay"] = "Date"
+
+#weight
+weight$Date <- format(weight$ActivityDate, format="%d/%m/%Y")
+weight <- weight[-2]
+
+#sleep
+sleep <- subset(sleep, select = -c(date))
+sleep$Date <- format(sleep$ActivityDate, format="%d/%m/%Y")
+
+#calorie
+colnames(calorie)[colnames(calorie) == "ActivityDay"] = "Date"
+
+#steps
+colnames(steps)[colnames(steps) == "ActivityDay"] = "Date"
+```
+
+```{r Merging the DataFrames: activity, calorie, intensity, and steps into bellabeat_data DataFrame}
+bellabeat_data_part1 <- merge(activity, calorie,by=c("Id", "Date")) #left:  intensity, steps, weight, 
+bellabeat_data_part2 <- merge(intensity, steps,by=c("Id", "Date"))
+bellabeat_data <- merge(bellabeat_data_part1, bellabeat_data_part2, by=c("Id", "Date"))
+
+
+#dont use this: seems incorrect!!
+bellabeat_data_part3 <- merge(bellabeat_data, sleep, by=c("Id"))
+bellabeat_data_part4 <- merge(bellabeat_data_part3, weight, by=c("Id"))
+```
+
+
+```{r}
+summary(bellabeat_data)
+```
+
+```{r}
+ggplot(data=bellabeat_data, aes(x=LightlyActiveMinutes.y)) + geom_boxplot()
+```
+
+
+```{r}
+ggplot(data=bellabeat_data, aes(x=FairlyActiveMinutes.x, y=Calories.x)) + geom_point()
+
+ggplot(data=bellabeat_data, aes(x=VeryActiveMinutes.y, y=Calories.x)) + geom_point(color="orange") + theme_dark() 
+
+ggplot(data=bellabeat_data, aes(x=SedentaryMinutes.x, y=Calories.x)) + geom_point()
+
+#not correct >>>
+ggplot(data=bellabeat_data_part4, aes(x=TotalMinutesAsleep, y=WeightKg)) + geom_point()
+```
+
+Analysis:
+1. The women who are Very Active are more likely to burn more Calories. 
